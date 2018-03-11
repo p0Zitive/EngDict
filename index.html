@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>Voice Test</title>
+
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link href="https://cdn.quilljs.com/1.3.5/quill.bubble.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</head>
+<body style="min-height: 400px;">
+
+<div class="container" align="center" style="max-width: 790px;">
+    <div class="row" style="max-width: 768px;">
+        <div class="col-sm" style="max-width: 150px;">
+            <div class="dropdown" style="margin: 3px;">
+                <button class="btn btn-light dropdown-toggle" type="button" id="ServiceProvider" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Service: Baidu
+                </button>
+                <div class="dropdown-menu" aria-labelledby="ServiceProvider">
+                    <a class="dropdown-item" href="#" id="Baidu">Baidu</a>
+                    <a class="dropdown-item" href="#" id="Yandex">Yandex</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm" style="max-width: 150px;">
+            <div class="dropdown" style="margin: 3px;">
+                <button class="btn btn-light dropdown-toggle" type="button" id="SpeechSpeed" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Speed: Normal
+                </button>
+                <div class="dropdown-menu" aria-labelledby="SpeechSpeed">
+                    <a class="dropdown-item" href="#" id="Slow">Slow</a>
+                    <a class="dropdown-item" href="#" id="Normal">Normal</a>
+                    <a class="dropdown-item" href="#" id="Fast">Fast</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm" style="max-width: 150px;">
+                <div class="dropdown" style="margin: 3px;">
+                    <button class="btn btn-light dropdown-toggle" type="button" id="VoiceGender" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Voice: Female-1
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="VoiceGender">
+                        <a class="dropdown-item" href="#" id="Female-1">Female-1</a>
+                        <a class="dropdown-item" href="#" id="Female-2">Female-2</a>
+                        <a class="dropdown-item" href="#" id="Female-3">Female-3</a>
+                        <a class="dropdown-item" href="#" id="Male-1">Male-1</a>
+                        <a class="dropdown-item" href="#" id="Male-2">Male-2</a>
+                    </div>
+                </div>
+            </div>
+        <div class="col-sm" style="max-width: 300px;">
+            <audio id="AudioPlayer" style="vertical-align: -webkit-baseline-middle; margin: 6px;" controls/>
+        </div>
+    </div>
+</div>
+
+<!-- Create the editor container -->
+<div id="editor" align="center"
+     style="max-width: 768px; width: 100%; height: 300px; border: 1px solid #ccc; margin: auto; font-size: 14px; font-family: monospace;">
+</div>
+
+<!-- Include the Quill library -->
+<script src="https://cdn.quilljs.com/1.3.5/quill.js"></script>
+
+<!-- Initialize Quill editor -->
+<script type="text/javascript">
+    var quill = new Quill('#editor', {
+        theme: 'bubble',
+        placeholder: '',
+    });
+
+    var currentSpeechSpeed = 'Normal';
+    var currentVoiceGender = 'Female-1';
+    var currentServiceProvider = 'Baidu';
+
+    // Disable button.
+    $('#VoiceGender').prop('disabled', true);
+
+    // Default text.
+    var defaultText = `The White House announced on Saturday that President Donald Trump will travel to Peru next month to meet with the nation's president and participate in a summit with the region's leaders.`;
+
+    quill.setText(defaultText);
+    quill.focus();
+</script>
+
+<div align="center" class="container">
+    <button type="button" id="CheckButton" class="btn btn-info"
+            style="margin-top: 10px; margin-bottom: 10px; width: 130px; outline: none">Play
+    </button>
+</div>
+
+<script>
+    function GetNumWords(text) {
+        var resultWords = text.replace(/[\n\r\?\.]/g, ' ');
+        resultWords = resultWords.replace(/[ ]{2,}/gi, " ");
+        var numWords = resultWords.split(' ').length - 1;
+
+        if (resultWords.length > 0 && numWords == 0)
+            numWords = 1;
+
+        return numWords;
+    }
+
+
+    function GetTTSRequest() {
+        var currentRequest = 'http://tts.baidu.com/text2audio?lan=en&voice=en&spd=2&ie=UTF-8&text=';
+
+        if (currentServiceProvider == 'Baidu')
+        {
+            var speed = '2';
+
+            if (currentSpeechSpeed == 'Slow')
+                speed = '1';
+
+            if (currentSpeechSpeed == 'Fast')
+                speed = '5';
+
+            currentRequest = 'http://tts.baidu.com/text2audio?lan=en&voice=en&spd=' + speed + '&ie=UTF-8&text=';
+        }
+
+        if (currentServiceProvider == 'Yandex')
+        {
+            var speed = '1';
+
+            if (currentSpeechSpeed == 'Slow')
+                speed = '0.75';
+
+            if (currentSpeechSpeed == 'Fast')
+                speed = '1.5';
+
+            var gender = '';
+
+            switch (currentVoiceGender) {
+                case 'Female-1': gender = 'jane'; break;
+                case 'Female-2': gender = 'alyss'; break;
+                case 'Female-3': gender = 'omazh'; break;
+                case 'Male-1': gender = 'zahar'; break;
+                case 'Male-2': gender = 'ermil'; break;
+            }
+
+            // Emotions might be: neutral good evil.
+            currentRequest = 'https://tts.voicetech.yandex.net/generate?key=899dfb68-2900-4d95-ad50-c822a5c066fc&format=mp3&quality=hi&lang=en-US&speaker=' + gender + '&speed=' + speed + '&emotion=good&text=';
+        }
+
+        return currentRequest;
+    }
+
+    // Select provider.
+    $('#Baidu').on('click', function () {
+        currentServiceProvider = 'Baidu';
+        $("#ServiceProvider").text('Service: Baidu');
+
+        // Set default voice.
+        currentVoiceGender = 'Female-1';
+        $("#VoiceGender").text('Voice: Female-1');
+
+        // Disable button.
+        $('#VoiceGender').prop('disabled', true);
+    })
+
+    $('#Yandex').on('click', function () {
+        currentServiceProvider = 'Yandex';
+        $("#ServiceProvider").text('Service: Yandex');
+
+        // Enable button.
+        $('#VoiceGender').prop('disabled', false);
+    })
+
+    // Select speed.
+    $('#Slow').on('click', function () {
+        currentSpeechSpeed = 'Slow';
+        $("#SpeechSpeed").text('Speed: Slow');
+    })
+
+    $('#Normal').on('click', function () {
+        currentSpeechSpeed = 'Normal';
+        $("#SpeechSpeed").text('Speed: Normal');
+    })
+
+    $('#Fast').on('click', function () {
+        currentSpeechSpeed = 'Fast';
+        $("#SpeechSpeed").text('Speed: Fast');
+    })
+
+    // Select voice gender.
+    $('#Female-1').on('click', function () {
+        currentVoiceGender = 'Female-1';
+        $("#VoiceGender").text('Voice: Female-1');
+    })
+
+    $('#Female-2').on('click', function () {
+        currentVoiceGender = 'Female-2';
+        $("#VoiceGender").text('Voice: Female-2');
+    })
+
+    $('#Female-3').on('click', function () {
+        currentVoiceGender = 'Female-3';
+        $("#VoiceGender").text('Voice: Female-3');
+    })
+
+    $('#Male-1').on('click', function () {
+        currentVoiceGender = 'Male-1';
+        $("#VoiceGender").text('Voice: Male-1');
+    })
+
+    $('#Male-2').on('click', function () {
+        currentVoiceGender = 'Male-2';
+        $("#VoiceGender").text('Voice: Male-2');
+    })
+
+    $('#CheckButton').click(function () {
+        var contentLength = quill.getLength();
+
+        if (contentLength > 0)
+            quill.removeFormat( 0, contentLength );
+
+        var text = quill.getText();
+        var numWords = GetNumWords(text);
+
+        if (numWords > 0 && text.length > 2) {
+            var ttsRequest = GetTTSRequest();
+
+            document.getElementById('AudioPlayer').src = ttsRequest + text;
+            document.getElementById('AudioPlayer').play();
+        }
+    });
+</script>
+
+</body>
+</html>
